@@ -46,7 +46,7 @@ void MD_AD9833::dumpCmd(uint16_t reg)
 }
 #endif
 
-void MD_AD9833::spiSend(uint16_t data)
+void FLASHMEM MD_AD9833::spiSend(uint16_t data)
 // Either use SPI.h or a dedicated shifting function.
 // Sometimes the hardware shift does not appear to work reliably with the hardware - 
 // similar problems also reported on the internet.
@@ -101,7 +101,7 @@ MD_AD9833::~MD_AD9833(void)
     SPI.end(); 
 };
 
-void MD_AD9833::reset(bool hold)
+void FLASHMEM MD_AD9833::reset(bool hold)
 // Reset is done on a 1 to 0 transition
 {
   bitSet(_regCtl, AD_RESET);
@@ -113,7 +113,7 @@ void MD_AD9833::reset(bool hold)
   }
 }
 
-void MD_AD9833::begin(void)
+void FLASHMEM MD_AD9833::begin(void)
 // Initialise the AD9833 and then set up safe values for the AD9833 device
 // Procedure from Figure 27 of in the AD9833 Data Sheet
 {
@@ -151,7 +151,7 @@ void MD_AD9833::begin(void)
   setActivePhase(CHAN_0);
 }
 
-boolean MD_AD9833::setActiveFrequency(channel_t chan)
+boolean FLASHMEM MD_AD9833::setActiveFrequency(channel_t chan)
 {
   PRINT("\nsetActiveFreq CHAN_", chan);
 
@@ -159,6 +159,8 @@ boolean MD_AD9833::setActiveFrequency(channel_t chan)
   {
   case CHAN_0: bitClear(_regCtl, AD_FSELECT); break;
   case CHAN_1: bitSet(_regCtl, AD_FSELECT);   break;
+  default:
+    return(false);
   }
 
   spiSend(_regCtl);
@@ -166,12 +168,12 @@ boolean MD_AD9833::setActiveFrequency(channel_t chan)
   return(true);
 }
 
-MD_AD9833::channel_t MD_AD9833::getActiveFrequency(void)
+MD_AD9833::channel_t FLASHMEM MD_AD9833::getActiveFrequency(void)
 { 
   return bitRead(_regCtl, AD_FSELECT) ? CHAN_1 : CHAN_0; 
 };
 
-boolean MD_AD9833::setActivePhase(channel_t chan)
+boolean FLASHMEM MD_AD9833::setActivePhase(channel_t chan)
 {
   PRINT("\nsetActivePhase CHAN_", chan);
 
@@ -179,6 +181,8 @@ boolean MD_AD9833::setActivePhase(channel_t chan)
   {
   case CHAN_0: bitClear(_regCtl, AD_PSELECT); break;
   case CHAN_1: bitSet(_regCtl, AD_PSELECT);   break;
+  default:
+    return(false);
   }
 
   spiSend(_regCtl);
@@ -186,12 +190,12 @@ boolean MD_AD9833::setActivePhase(channel_t chan)
   return(true);
 }
 
-MD_AD9833::channel_t MD_AD9833::getActivePhase(void)
+MD_AD9833::channel_t FLASHMEM MD_AD9833::getActivePhase(void)
 { 
   return bitRead(_regCtl, AD_PSELECT) ? CHAN_1 : CHAN_0; 
 };
 
-boolean MD_AD9833::setMode(mode_t mode)
+boolean FLASHMEM MD_AD9833::setMode(mode_t mode)
 {
   PRINTS("\nsetWave ");
   _modeLast = mode;
@@ -233,6 +237,8 @@ boolean MD_AD9833::setMode(mode_t mode)
     bitClear(_regCtl, AD_SLEEP1);
     bitClear(_regCtl, AD_SLEEP12);
     break;
+  default:
+    return(false);
   }
 
   spiSend(_regCtl);
@@ -240,19 +246,19 @@ boolean MD_AD9833::setMode(mode_t mode)
   return(true);
 }
 
-uint32_t MD_AD9833::calcFreq(float f) 
+uint32_t FLASHMEM MD_AD9833::calcFreq(float f) 
 // Calculate register value for AD9833 frequency register from a frequency
 { 
   return (uint32_t)((f * AD_2POW28/AD_MCLK) + 0.5);
 }
 
-uint16_t MD_AD9833::calcPhase(float a) 
+uint16_t FLASHMEM MD_AD9833::calcPhase(float a) 
 // Calculate the value for AD9833 phase register from given phase in tenths of a degree
 {
   return (uint16_t)((512.0 * (a/10) / 45) + 0.5);
 }
 
-boolean MD_AD9833::setFrequency(channel_t chan, float freq)
+boolean FLASHMEM MD_AD9833::setFrequency(channel_t chan, float freq)
 {
   uint16_t  freq_select;
 
@@ -270,6 +276,8 @@ boolean MD_AD9833::setFrequency(channel_t chan, float freq)
   {
   case CHAN_0:  freq_select = SEL_FREQ0; break;
   case CHAN_1:  freq_select = SEL_FREQ1; break;
+  default:
+    return(false);
   }
 
   // Assumes B28 is on so we can send consecutive words
@@ -282,7 +290,7 @@ boolean MD_AD9833::setFrequency(channel_t chan, float freq)
   return(true);
 }
 
-boolean MD_AD9833::setPhase(channel_t chan, uint16_t phase)
+boolean FLASHMEM MD_AD9833::setPhase(channel_t chan, uint16_t phase)
 {
   uint16_t  phase_select;
 
@@ -299,6 +307,8 @@ boolean MD_AD9833::setPhase(channel_t chan, uint16_t phase)
   {
   case CHAN_0:  phase_select = SEL_PHASE0; break;
   case CHAN_1:  phase_select = SEL_PHASE1; break;
+  default:
+    return(false);
   }
 
   // Now send the phase as 12 bits with appropriate address bits
